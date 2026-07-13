@@ -1,6 +1,6 @@
 <?php
 include("db.php");
-
+include("header.php");
 $error = ""; // TAMBAH titik koma
 
 // ---------- TAMBAH / EDIT ----------
