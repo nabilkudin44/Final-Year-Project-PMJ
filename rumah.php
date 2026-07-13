@@ -1,24 +1,24 @@
 <?php
 include("db.php");
+include("header.php");
 
 // ---------- TAMBAH / EDIT ----------
 if (isset($_POST['simpan'])) {
     $id_rumah   = $_POST['id_rumah'];
     $no_rumah   = mysqli_real_escape_string($conn, $_POST['no_rumah']);
-    $alamat     = mysqli_real_escape_string($conn, $_POST['alamat']);
     $harga_sewa = $_POST['harga_sewa'];
     $status     = $_POST['status'];
 
     if (empty($id_rumah)) {
         // Tambah rumah baru
-        $sql = "INSERT INTO rumah (no_rumah, alamat, harga_sewa, status) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO rumah (no_rumah, harga_sewa, status) VALUES (?, ?, ?)";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "ssds", $no_rumah, $alamat, $harga_sewa, $status);
+        mysqli_stmt_bind_param($stmt, "sds", $no_rumah, $harga_sewa, $status);
     } else {
         // Kemaskini rumah sedia ada
-        $sql = "UPDATE rumah SET no_rumah=?, alamat=?, harga_sewa=?, status=? WHERE id_rumah=?";
+        $sql = "UPDATE rumah SET no_rumah=?, harga_sewa=?, status=? WHERE id_rumah=?";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "ssdsi", $no_rumah, $alamat, $harga_sewa, $status, $id_rumah);
+        mysqli_stmt_bind_param($stmt, "sdsi", $no_rumah, $harga_sewa, $status, $id_rumah);
     }
     mysqli_stmt_execute($stmt);
     header("Location: rumah.php");
@@ -58,7 +58,6 @@ $result = mysqli_query($conn, "SELECT * FROM rumah ORDER BY id_rumah DESC");
         <thead class="table-dark">
             <tr>
                 <th>No Rumah</th>
-                <th>Alamat</th>
                 <th>Harga Sewa</th>
                 <th>Status</th>
                 <th>Tindakan</th>
@@ -68,7 +67,6 @@ $result = mysqli_query($conn, "SELECT * FROM rumah ORDER BY id_rumah DESC");
             <?php while ($row = mysqli_fetch_assoc($result)): ?>
             <tr>
                 <td><?= htmlspecialchars($row['no_rumah']) ?></td>
-                <td><?= htmlspecialchars($row['alamat']) ?></td>
                 <td>RM <?= number_format($row['harga_sewa'], 2) ?></td>
                 <td>
                     <?php if ($row['status'] == 'Disewa'): ?>
@@ -111,10 +109,6 @@ $result = mysqli_query($conn, "SELECT * FROM rumah ORDER BY id_rumah DESC");
             <input type="text" class="form-control" name="no_rumah" id="no_rumah" required>
           </div>
           <div class="mb-3">
-            <label class="form-label">Alamat</label>
-            <input type="text" class="form-control" name="alamat" id="alamat">
-          </div>
-          <div class="mb-3">
             <label class="form-label">Harga Sewa (RM)</label>
             <input type="number" step="0.01" class="form-control" name="harga_sewa" id="harga_sewa" required>
           </div>
@@ -140,7 +134,6 @@ function tambahRumah() {
     document.getElementById('modalTitle').innerText = 'Tambah Rumah';
     document.getElementById('id_rumah').value = '';
     document.getElementById('no_rumah').value = '';
-    document.getElementById('alamat').value = '';
     document.getElementById('harga_sewa').value = '';
     document.getElementById('status').value = 'Kosong';
 }
@@ -149,7 +142,6 @@ function editRumah(data) {
     document.getElementById('modalTitle').innerText = 'Edit Rumah';
     document.getElementById('id_rumah').value = data.id_rumah;
     document.getElementById('no_rumah').value = data.no_rumah;
-    document.getElementById('alamat').value = data.alamat;
     document.getElementById('harga_sewa').value = data.harga_sewa;
     document.getElementById('status').value = data.status;
 }
