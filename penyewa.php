@@ -555,7 +555,6 @@ $result = mysqli_query($conn, "SELECT * FROM penyewa ORDER BY id_penyewa DESC");
                             <th>No KP</th>
                             <th>No Telefon</th>
                             <th>Email</th>
-                            <th>Status</th>
                             <th>Tindakan</th>
                         </tr>
                     </thead>
@@ -570,17 +569,6 @@ $result = mysqli_query($conn, "SELECT * FROM penyewa ORDER BY id_penyewa DESC");
                                 <td><?= htmlspecialchars($row['no_ic'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['no_telefon'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['email']) ?></td>
-                                <td>
-                                    <?php if (!empty($row['password'])): ?>
-                                        <span class="badge-status hash">
-                                            <i class="fas fa-lock me-1"></i> Terhash
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="badge-status tiada">
-                                            <i class="fas fa-exclamation-triangle me-1"></i> Tiada
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
                                 <td>
                                     <div class="d-flex gap-2">
                                         <button class="btn-edit-action"
@@ -614,14 +602,6 @@ $result = mysqli_query($conn, "SELECT * FROM penyewa ORDER BY id_penyewa DESC");
             
             <!-- Footer -->
             <div class="table-info-footer">
-                <div>
-                    <i class="fas fa-rows me-1"></i>
-                    Rows: <span><?= mysqli_num_rows($result) ?></span>
-                </div>
-                <div>
-                    <i class="fas fa-columns me-1"></i>
-                    Columns: <span>7</span>
-                </div>
                 <div>
                     <i class="fas fa-clock me-1"></i>
                     Last updated: <span><?= date('d/m/Y H:i:s') ?></span>
