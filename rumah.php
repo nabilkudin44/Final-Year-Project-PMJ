@@ -438,7 +438,6 @@ $result = mysqli_query($conn, "SELECT * FROM rumah ORDER BY id_rumah DESC");
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID Rumah</th>
                             <th>No Rumah</th>
                             <th>Harga Sewa</th>
                             <th>Status</th>
@@ -449,9 +448,6 @@ $result = mysqli_query($conn, "SELECT * FROM rumah ORDER BY id_rumah DESC");
                         <?php if (mysqli_num_rows($result) > 0): ?>
                             <?php while ($row = mysqli_fetch_assoc($result)): ?>
                             <tr>
-                                <td>
-                                    <strong><?= $row['id_rumah'] ?></strong>
-                                </td>
                                 <td><?= htmlspecialchars($row['no_rumah']) ?></td>
                                 <td>RM <?= number_format($row['harga_sewa'], 2) ?></td>
                                 <td>
@@ -498,14 +494,6 @@ $result = mysqli_query($conn, "SELECT * FROM rumah ORDER BY id_rumah DESC");
             
             <!-- Footer -->
             <div class="table-info-footer">
-                <div>
-                    <i class="fas fa-rows me-1"></i>
-                    Rows: <span><?= mysqli_num_rows($result) ?></span>
-                </div>
-                <div>
-                    <i class="fas fa-columns me-1"></i>
-                    Columns: <span>5</span>
-                </div>
                 <div>
                     <i class="fas fa-clock me-1"></i>
                     Last updated: <span><?= date('d/m/Y H:i:s') ?></span>
