@@ -567,14 +567,6 @@ $tunggakan = mysqli_fetch_assoc(mysqli_query($conn,
             <!-- Footer -->
             <div class="table-info-footer">
                 <div>
-                    <i class="fas fa-rows me-1"></i>
-                    Rows: <span><?= mysqli_num_rows($result) ?></span>
-                </div>
-                <div>
-                    <i class="fas fa-columns me-1"></i>
-                    Columns: <span>7</span>
-                </div>
-                <div>
                     <i class="fas fa-clock me-1"></i>
                     Last updated: <span><?= date('d/m/Y H:i:s') ?></span>
                 </div>
