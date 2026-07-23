@@ -46,13 +46,16 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
+                    <a class="nav-link" href="dashboard.php">Dashboard</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="rumah.php">Rumah</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="penyewa.php">Penyewa</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="dashboard.php">Dashboard</a>
+                    <a class="nav-link" href="rental.php">Sewaan</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="logout.php">Logout</a>
