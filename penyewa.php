@@ -550,7 +550,6 @@ $result = mysqli_query($conn, "SELECT * FROM penyewa ORDER BY id_penyewa DESC");
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Nama</th>
                             <th>No KP</th>
                             <th>No Telefon</th>
@@ -562,9 +561,6 @@ $result = mysqli_query($conn, "SELECT * FROM penyewa ORDER BY id_penyewa DESC");
                         <?php if (mysqli_num_rows($result) > 0): ?>
                             <?php while ($row = mysqli_fetch_assoc($result)): ?>
                             <tr>
-                                <td>
-                                    <strong><?= $row['id_penyewa'] ?></strong>
-                                </td>
                                 <td><?= htmlspecialchars($row['nama']) ?></td>
                                 <td><?= htmlspecialchars($row['no_ic'] ?? '-') ?></td>
                                 <td><?= htmlspecialchars($row['no_telefon'] ?? '-') ?></td>
