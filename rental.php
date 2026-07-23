@@ -580,10 +580,7 @@ $result = mysqli_query($conn, $sql);
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID Sewa</th>
-                            <th>ID Penyewa</th>
                             <th>Nama Penyewa</th>
-                            <th>ID Rumah</th>
                             <th>No Rumah</th>
                             <th>Tarikh Masuk</th>
                             <th>Deposit</th>
@@ -595,15 +592,10 @@ $result = mysqli_query($conn, $sql);
                             <?php while ($row = mysqli_fetch_assoc($result)): ?>
                             <tr>
                                 <td>
-                                    <strong><?= $row['id_sewa'] ?></strong>
-                                </td>
-                                <td><?= $row['id_penyewa'] ?></td>
-                                <td>
                                     <span class="text-ellipsis" title="<?= htmlspecialchars($row['nama_penyewa']) ?>">
                                         <?= htmlspecialchars($row['nama_penyewa'] ?? '-') ?>
                                     </span>
                                 </td>
-                                <td><?= $row['id_rumah'] ?></td>
                                 <td>
                                     <span class="badge bg-light text-dark">
                                         <?= htmlspecialchars($row['no_rumah'] ?? '-') ?>
