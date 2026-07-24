@@ -34,25 +34,38 @@
             padding: 15px 0;
             margin-top: auto;
         }
+        .nav-link i {
+            margin-right: 5px;
+        }
+        .nav-link.profile-link {
+            color: #ddc211 !important;
+            font-weight: 600;
+        }
+        .nav-link.profile-link:hover {
+            color: #f0d000 !important;
+        }
     </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
     <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">UMAHE KAK JUM</a>
+        <a class="navbar-brand" href="dashboard_tenant.php">UMAHE KAK JUM</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="dashboard_tenant.php">Dashboard</a>
+                    <a class="nav-link" href="dashboard_tenant.php"><i class="fas fa-chart-pie"></i> Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="bayaran.php">Sewaan</a>
+                    <a class="nav-link" href="bayaran.php"><i class="fas fa-credit-card"></i> Sewaan</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-danger" href="logout.php">Logout</a>
+                    <a class="nav-link profile-link" href="profile.php"><i class="fas fa-user-circle"></i> Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </li>
             </ul>
         </div>

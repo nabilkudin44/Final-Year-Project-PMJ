@@ -1,6 +1,7 @@
 <?php
 include("db.php");
 include("db_toyyipay.php");
+include("header_penyewa.php");
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'penyewa') {
     header("Location: login.php");
@@ -24,7 +25,7 @@ $result_sewa = mysqli_stmt_get_result($stmt);
 $sewa = mysqli_fetch_assoc($result_sewa);
 
 // ============================================
-// PROSES BAYARAN
+// PROSES BAYARAN DENGAN TOYYIBPAY
 // ============================================
 if (isset($_POST['bayar'])) {
     $id_sewa = $_POST['id_sewa'];
@@ -44,7 +45,7 @@ if (isset($_POST['bayar'])) {
     // Reference number unik
     $ref_no = 'SEWA-' . time() . '-' . rand(1000, 9999);
     
-    // Simpan rekod bayaran sementara
+    // Simpan rekod bayaran sementara (status Pending dulu)
     $sql = "INSERT INTO bayaran (id_sewa, bulan, tahun, jumlah, status, tarikh_bayar, ref_no) 
             VALUES (?, ?, ?, ?, 'Pending', NULL, ?)";
     $stmt = mysqli_prepare($conn, $sql);
@@ -62,24 +63,24 @@ if (isset($_POST['bayar'])) {
         'https://toyyibpay.com/index.php/api/createBill';
     
     // Pastikan amount dalam sen (integer)
-    $billAmount = $jumlah * 100; // ToyyibPay guna sen
+    $billAmount = $jumlah * 100;
     
     $data = [
         'userSecretKey' => TOYYIBPAY_SECRET_KEY,
         'categoryCode' => TOYYIBPAY_CATEGORY_CODE,
         'billName' => 'Sewaan Rumah - ' . $bulan . ' ' . $tahun,
         'billDescription' => 'Bayaran sewa untuk bulan ' . $bulan . ' ' . $tahun,
-        'billPriceSetting' => 1, // 1 = customer boleh adjust amount
-        'billPayorInfo' => 1, // 1 = required payer info
-        'billAmount' => $billAmount, // Dalam sen
-        'billReturnUrl' => TOYYIBPAY_RETURN_URL . '?id_bayaran=' . $id_bayaran,
-        'billCallbackUrl' => TOYYIBPAY_CALLBACK_URL,
+        'billPriceSetting' => 1,
+        'billPayorInfo' => 1,
+        'billAmount' => (string)$billAmount,
+        'billReturnUrl' => 'http://localhost/rental_hub/payment_return.php?id_bayaran=' . $id_bayaran,
+        'billCallbackUrl' => 'http://localhost/rental_hub/payment_callback.php',
         'billExternalReferenceNo' => $ref_no,
         'billTo' => $penyewa['nama'],
         'billEmail' => $penyewa['email'],
         'billPhone' => $penyewa['no_telefon'],
-        'billPaymentChannel' => '0', // 0 = all channels
-        'billChargeToCustomer' => '2' // 2 = customer pays fees
+        'billPaymentChannel' => '0',
+        'billChargeToCustomer' => '2'
     ];
     
     // Debug - log data
@@ -90,19 +91,27 @@ if (isset($_POST['bayar'])) {
     curl_setopt($curl, CURLOPT_URL, $api_url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // Untuk localhost testing
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
     
-    $result = curl_exec($curl);
+    $result_api = curl_exec($curl);
     $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($curl);
     curl_close($curl);
     
     // Debug - log response
-    error_log("ToyyibPay Response: " . $result);
+    error_log("ToyyibPay Response: " . $result_api);
     error_log("HTTP Code: " . $http_code);
+    error_log("CURL Error: " . $curl_error);
     
-    $response = json_decode($result);
+    // Tunjukkan error jika ada
+    if ($curl_error) {
+        $error = "CURL Error: " . $curl_error;
+    }
     
-    if ($response && isset($response[0]->BillCode)) {
+    $response = json_decode($result_api);
+    
+    // SEMAK RESPONSE DENGAN BETUL
+    if ($response && is_array($response) && isset($response[0]->BillCode)) {
         $bill_code = $response[0]->BillCode;
         
         // Update record dengan bill code
@@ -116,10 +125,13 @@ if (isset($_POST['bayar'])) {
         header("Location: " . $payment_url);
         exit();
     } else {
-        // Debug - display error
+        // Tunjukkan error
         $error = "Gagal mencipta bil. Sila cuba lagi.";
-        if ($result) {
-            $error .= " Response: " . htmlspecialchars($result);
+        if ($result_api) {
+            $error .= "<br><small>Response: " . htmlspecialchars($result_api) . "</small>";
+        }
+        if (isset($response->message)) {
+            $error .= "<br><small>Message: " . htmlspecialchars($response->message) . "</small>";
         }
     }
 }
@@ -147,7 +159,6 @@ mysqli_stmt_execute($stmt_histori);
 $result_histori = mysqli_stmt_get_result($stmt_histori);
 ?>
 
-<!-- HTML sama macam sebelum ni, tapi tambah error display -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -292,6 +303,15 @@ $result_histori = mysqli_stmt_get_result($stmt_histori);
             padding: 15px 20px;
             margin-bottom: 15px;
         }
+        .alert-error i {
+            margin-right: 10px;
+        }
+        .alert-error small {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -311,7 +331,7 @@ $result_histori = mysqli_stmt_get_result($stmt_histori);
                     
                     <?php if (isset($error)): ?>
                         <div class="alert-error">
-                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <i class="fas fa-exclamation-circle"></i>
                             <?= $error ?>
                         </div>
                     <?php endif; ?>
