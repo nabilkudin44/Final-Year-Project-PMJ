@@ -1,10 +1,11 @@
-<?php
+<?php  // <-- ADD THIS AT THE VERY FIRST LINE, NO SPACES BEFORE IT
 $__current = basename($_SERVER['PHP_SELF']);
 function navActiveT($files) {
     global $__current;
     $files = is_array($files) ? $files : [$files];
     return in_array($__current, $files) ? 'active' : '';
 }
+// ... rest of your code
 
 // Function untuk dapatkan inisial
 function getInitialsT($name) {

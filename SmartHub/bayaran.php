@@ -1,4 +1,5 @@
 <?php
+ob_start();
 include("db.php");
 include_once("db_toyyipay.php");
 include("header_penyewa.php");
