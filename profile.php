@@ -14,13 +14,14 @@ $user_id = $_SESSION['user_id'];
 // AMBIL MAKLUMAT USER
 // ============================================
 if ($role == 'admin') {
-    // Admin - guna hardcoded data dari session
-    $nama = $_SESSION['username'] ?? 'Admin';
-    $email = 'admin@umahkakjum.com';
-    $no_telefon = '-';
+    // Admin - ambil dari session (yang diisi dari database)
+    $nama = $_SESSION['nama'] ?? 'Admin';
+    $email = $_SESSION['email'] ?? 'admin@umahkakjum.com';
+    $no_telefon = $_SESSION['no_telefon'] ?? '-';
     $no_ic = '-';
     $role_display = 'Tuan Rumah / Admin';
     $tarikh_daftar = '-';
+    $username = $_SESSION['username'] ?? 'admin';
 } else {
     // Penyewa - ambil dari database
     $sql = "SELECT * FROM penyewa WHERE id_penyewa = ?";
@@ -74,181 +75,6 @@ if ($role == 'penyewa') {
 }
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Profile Saya</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background: #f0f2f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .page-wrapper {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 30px 20px;
-        }
-        .profile-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        .profile-header {
-            background: linear-gradient(135deg, #1a1a2e, #2d2d44);
-            padding: 30px 30px 20px;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-        .profile-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e4b700, #c49b00);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 38px;
-            color: white;
-            flex-shrink: 0;
-        }
-        .profile-title h4 {
-            font-weight: 700;
-            margin: 0;
-        }
-        .profile-title .badge-role {
-            background: rgba(255,255,255,0.15);
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 5px;
-        }
-        .profile-body {
-            padding: 30px;
-        }
-        .info-row {
-            display: flex;
-            padding: 14px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .info-row:last-child {
-            border-bottom: none;
-        }
-        .info-row .label {
-            width: 150px;
-            color: #888;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-        .info-row .value {
-            font-weight: 600;
-            color: #1a1a2e;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px dashed #e8ecf1;
-        }
-        .stat-item {
-            text-align: center;
-            background: #f8f9fc;
-            padding: 15px;
-            border-radius: 10px;
-        }
-        .stat-item .number {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-        .stat-item .label {
-            font-size: 13px;
-            color: #888;
-        }
-        .stat-item .number.gold {
-            color: #e4b700;
-        }
-        .stat-item .number.green {
-            color: #2e7d32;
-        }
-        .stat-item .number.blue {
-            color: #1565c0;
-        }
-        .btn-edit {
-            background: #e4b700;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 35px;
-            font-weight: 700;
-            color: white;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .btn-edit:hover {
-            background: #c49b00;
-            color: white;
-            transform: translateY(-2px);
-        }
-        .btn-back {
-            background: #e8ecf1;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .btn-back:hover {
-            background: #d5d9e0;
-            color: #444;
-        }
-        .action-buttons {
-            margin-top: 25px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        @media (max-width: 600px) {
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-                padding: 25px;
-            }
-            .info-row {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .info-row .label {
-                width: 100%;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        @media (max-width: 400px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-
 <?php
 if ($role == 'admin') {
     include("header.php");
@@ -266,17 +92,27 @@ if ($role == 'admin') {
             </div>
             <div class="profile-title">
                 <h4><?= htmlspecialchars($nama) ?></h4>
-                <span class="badge-role">
-                    <i class="fas fa-<?= $role == 'admin' ? 'user-shield' : 'user' ?> me-1"></i>
-                    <?= $role_display ?>
-                </span>
+                <?php if ($role == 'admin'): ?>
+                    <span class="badge-role">
+                        <i class="fas fa-user-shield me-1"></i>
+                        <?= $role_display ?>
+                    </span>
+                    <small style="display:block;font-size:11px;opacity:0.7;margin-top:3px;">
+                        <i class="fas fa-user me-1"></i> @<?= htmlspecialchars($username) ?>
+                    </small>
+                <?php else: ?>
+                    <span class="badge-role">
+                        <i class="fas fa-user me-1"></i>
+                        <?= $role_display ?>
+                    </span>
+                <?php endif; ?>
             </div>
         </div>
 
         <!-- Body -->
         <div class="profile-body">
             <!-- Maklumat Profile -->
-            <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2" style="color: #e4b700;"></i> Maklumat Profile</h6>
+            <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2" style="color: var(--primary);"></i> Maklumat Profile</h6>
             
             <div class="info-row">
                 <span class="label"><i class="fas fa-user me-2"></i> Nama</span>
@@ -286,19 +122,29 @@ if ($role == 'admin') {
                 <span class="label"><i class="fas fa-envelope me-2"></i> Email</span>
                 <span class="value"><?= htmlspecialchars($email) ?></span>
             </div>
-            <?php if ($role == 'penyewa'): ?>
             <div class="info-row">
                 <span class="label"><i class="fas fa-phone me-2"></i> No Telefon</span>
                 <span class="value"><?= htmlspecialchars($no_telefon) ?></span>
             </div>
-            <div class="info-row">
-                <span class="label"><i class="fas fa-id-card me-2"></i> No Kad Pengenalan</span>
-                <span class="value"><?= htmlspecialchars($no_ic) ?></span>
-            </div>
-            <div class="info-row">
-                <span class="label"><i class="fas fa-tag me-2"></i> ID Penyewa</span>
-                <span class="value">#<?= $user_id ?></span>
-            </div>
+            
+            <?php if ($role == 'admin'): ?>
+                <div class="info-row">
+                    <span class="label"><i class="fas fa-user-tag me-2"></i> Username</span>
+                    <span class="value"><?= htmlspecialchars($username) ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label"><i class="fas fa-tag me-2"></i> ID Admin</span>
+                    <span class="value">#<?= $user_id ?></span>
+                </div>
+            <?php else: ?>
+                <div class="info-row">
+                    <span class="label"><i class="fas fa-id-card me-2"></i> No Kad Pengenalan</span>
+                    <span class="value"><?= htmlspecialchars($no_ic) ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label"><i class="fas fa-tag me-2"></i> ID Penyewa</span>
+                    <span class="value">#<?= $user_id ?></span>
+                </div>
             <?php endif; ?>
 
             <!-- Statistik (untuk penyewa sahaja) -->
@@ -317,6 +163,22 @@ if ($role == 'admin') {
                     <div class="label">Total Bayaran</div>
                 </div>
             </div>
+            <?php else: ?>
+            <!-- Admin Stats -->
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="number gold"><?= mysqli_num_rows(mysqli_query($conn, "SELECT * FROM rumah")) ?></div>
+                    <div class="label">Jumlah Rumah</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number green"><?= mysqli_num_rows(mysqli_query($conn, "SELECT * FROM rumah WHERE status='Disewa'")) ?></div>
+                    <div class="label">Rumah Disewa</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number blue"><?= mysqli_num_rows(mysqli_query($conn, "SELECT * FROM penyewa")) ?></div>
+                    <div class="label">Jumlah Penyewa</div>
+                </div>
+            </div>
             <?php endif; ?>
 
             <!-- Action Buttons -->
@@ -332,6 +194,10 @@ if ($role == 'admin') {
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php
+if ($role == 'admin') {
+    include("footer.php");
+} else {
+    include("footer_penyewa.php");
+}
+?>

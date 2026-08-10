@@ -58,336 +58,181 @@ if (isset($_POST['login'])) {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="ms">
 <head>
-    <title>Smart Rent Hub - Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Rent Hub — Log Masuk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/theme.css">
     <style>
         body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: #0b1220;
+        }
+        .auth-split { display: flex; width: 100%; min-height: 100vh; }
+        .auth-visual {
+            flex: 1.1;
+            position: relative;
+            background: linear-gradient(160deg, #0f172a 0%, #16213a 55%, #1d2b4f 100%);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px;
+            color: #fff;
+        }
+        .auth-visual::before {
+            content: '';
+            position: absolute;
+            inset: 0;
             background-image: url('RumahSewa.jpg');
             background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            opacity: 0.16;
         }
-        
-        body::before {
+        .auth-visual::after {
             content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 0;
-        }
-        
-        .login-container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 420px;
-            padding: 20px;
-        }
-        
-        .login-card {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 16px;
-            padding: 45px 40px 35px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        .brand-header {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-        
-        .brand-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #e4b700, #938e9f);
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            color: white;
-            font-size: 32px;
-            box-shadow: 0 8px 25px rgba(228, 183, 0, 0.3);
-        }
-        
-        .brand-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a2e;
-            letter-spacing: -0.5px;
-        }
-        
-        .brand-title span {
-            color: #e4b700;
-        }
-        
-        .brand-subtitle {
-            font-size: 14px;
-            color: #888;
-            font-weight: 400;
-            margin-top: 2px;
-        }
-        
-        .role-badges {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .role-badge {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 14px;
-            border-radius: 20px;
-            letter-spacing: 0.3px;
-        }
-        
-        .role-badge.admin {
-            background: #e4b700;
-            color: white;
-        }
-        
-        .role-badge.user {
-            background: #4a6cf7;
-            color: white;
-        }
-        
-        .input-group-custom {
-            position: relative;
-            margin-bottom: 20px;
-        }
-        
-        .input-group-custom .form-control {
-            width: 100%;
-            padding: 14px 16px 14px 45px;
-            border: 2px solid #e8ecf1;
-            border-radius: 12px;
-            font-size: 15px;
-            background: #f8f9fc;
-            transition: all 0.3s ease;
-            height: 52px;
-        }
-        
-        .input-group-custom .form-control:focus {
-            border-color: #e4b700;
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(228, 183, 0, 0.1);
-        }
-        
-        .input-group-custom .input-icon {
             position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #aaa;
-            font-size: 16px;
-            z-index: 2;
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, rgba(37,99,235,0.35), transparent 70%);
+            top: -120px; right: -120px;
+            border-radius: 50%;
         }
-        
-        .options-row {
+        .auth-visual .vbrand { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; }
+        .auth-visual .vbrand .brand-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            display: flex; align-items: center; justify-content: center; font-size: 19px;
+            box-shadow: 0 8px 20px rgba(37,99,235,0.4);
+        }
+        .auth-visual .vbrand .vtext { font-weight: 700; font-size: 19px; letter-spacing: -0.3px; }
+        .auth-visual .vbrand .vtext span { color: #60a5fa; }
+        .auth-visual .headline {
+            position: relative; z-index: 1;
+            font-size: 34px; font-weight: 800; line-height: 1.25; letter-spacing: -0.6px; max-width: 440px;
+        }
+        .auth-visual .headline span { color: #60a5fa; }
+        .auth-visual .sub { position: relative; z-index: 1; color: #a9b4cc; font-size: 14.5px; max-width: 420px; margin-top: 12px; }
+        .auth-visual .vfoot { position: relative; z-index: 1; color: #6b7794; font-size: 12.5px; }
+        .stat-chips { position: relative; z-index: 1; display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+        .stat-chips .chip {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            min-width: 120px;
+        }
+        .stat-chips .chip .n { font-size: 19px; font-weight: 800; color: #fff; }
+        .stat-chips .chip .l { font-size: 11.5px; color: #93a0bd; margin-top: 2px; }
+
+        .auth-form-side {
+            flex: 1;
+            background: #f5f7fb;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            font-size: 14px;
+            justify-content: center;
+            padding: 40px 24px;
         }
-        
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #555;
-            cursor: pointer;
+        .login-container { width: 100%; max-width: 400px; }
+        .login-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px 36px;
+            box-shadow: 0 20px 60px rgba(16,24,40,0.08);
+            border: 1px solid #eef0f6;
         }
-        
-        .remember-me input[type="checkbox"] {
-            width: 17px;
-            height: 17px;
-            accent-color: #e4b700;
-            cursor: pointer;
+        .brand-header { text-align: left; margin-bottom: 30px; }
+        .brand-header h2 { font-size: 22px; font-weight: 800; color: #101828; letter-spacing: -0.4px; margin: 0 0 6px; }
+        .brand-header p { color: #6b7280; font-size: 14px; margin: 0; }
+
+        .input-group-custom { position: relative; margin-bottom: 18px; }
+        .input-group-custom .form-control {
+            width: 100%; padding: 13px 16px 13px 44px; border: 1.5px solid #e7eaf3; border-radius: 12px;
+            font-size: 14.5px; background: #fbfcfe; transition: all 0.2s ease; height: 50px;
         }
-        
-        .forgot-password {
-            color: #969aa9;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-        
+        .input-group-custom .form-control:focus { border-color: #2563eb; background: #fff; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+        .input-group-custom .input-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #9aa3b2; font-size: 15px; z-index: 2; }
+
+        .options-row { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 22px; font-size: 13.5px; }
+        .forgot-password { color: #6b7280; font-weight: 500; }
+        .forgot-password:hover { text-decoration: underline; }
+
         .btn-login {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #e4b700 0%, #c49b00 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(228, 183, 0, 0.3);
+            width: 100%; padding: 14px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none;
+            border-radius: 12px; color: #fff; font-size: 15.5px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s ease; box-shadow: 0 8px 20px rgba(37,99,235,0.28);
         }
-        
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(228, 183, 0, 0.4);
-            background: linear-gradient(135deg, #f0c800 0%, #d4a800 100%);
-        }
-        
-        .login-info {
-            background: #f8f9fc;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-top: 15px;
-            border: 1px dashed #e4b700;
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .login-info .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 3px 0;
-        }
-        
-        .login-info .label {
-            font-weight: 500;
-            color: #888;
-        }
-        
-        .login-info .value.admin {
-            color: #e4b700;
-            font-weight: 600;
-        }
-        
-        .login-info .value.user {
-            color: #4a6cf7;
-            font-weight: 600;
-        }
-        
-        .register-section {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e8ecf1;
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .register-section a {
-            color: #4a6cf7;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        
-        .register-section a:hover {
-            text-decoration: underline;
-        }
-        
-        .login-footer {
-            text-align: center;
-            margin-top: 25px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .alert-custom {
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            border: none;
-        }
-        
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 30px 25px 25px;
-            }
-            .brand-title {
-                font-size: 20px;
-            }
-            .options-row {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
-            .login-container {
-                padding: 10px;
-            }
-            .login-info .info-row {
-                flex-direction: column;
-                gap: 2px;
-            }
-        }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(37,99,235,0.35); }
+
+        .alert-custom { border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 13.5px; border: none; }
+
+        @media (max-width: 900px) { .auth-visual { display: none; } }
+        @media (max-width: 480px) { .login-card { padding: 32px 24px; } }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="brand-header">
-                <div class="brand-icon">
-                    <i class="fas fa-home"></i>
-                </div>
-                <div class="brand-title">Smart <span>Rent</span> Hub</div>
-                <div class="brand-subtitle">Smart Rental Management System</div>
-                
+    <div class="auth-split">
+        <div class="auth-visual">
+            <div class="vbrand">
+                <div class="brand-icon"><i class="fas fa-home"></i></div>
+                <div class="vtext">Smart<span>Rent</span> Hub</div>
             </div>
-            
-            <?php if($error): ?>
-                <div class="alert alert-danger alert-custom alert-dismissible fade show">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <?php echo $error; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div>
+                <div class="headline">Urus hartanah sewa anda dengan <span>lebih bijak.</span></div>
+                <p class="sub">Satu platform untuk tuan rumah dan penyewa — pengurusan sewaan, bayaran dan komunikasi dalam satu tempat.</p>
+                <div class="stat-chips">
+                    <div class="chip"><div class="n">100%</div><div class="l">Digital &amp; selamat</div></div>
+                    <div class="chip"><div class="n">24/7</div><div class="l">Akses bila-bila masa</div></div>
+                    <div class="chip"><div class="n">RM</div><div class="l">Bayaran dalam talian</div></div>
                 </div>
-            <?php endif; ?>
-            
-            <form method="POST">
-                <div class="input-group-custom">
-                    <i class="fas fa-user input-icon"></i>
-                    <input class="form-control" type="text" name="email" placeholder="Email / No IC / Username" required>
-                </div>
-                
-                <div class="input-group-custom">
-                    <i class="fas fa-lock input-icon"></i>
-                    <input class="form-control" type="password" name="password" placeholder="Enter your password" required>
-                </div>
-                
-                <div class="options-row">
-                    <label class="remember-me">
-                        <input type="checkbox" name="remember"> Remember me
-                    </label>
-                    <a href="#" class="forgot-password">Forget password?</a>
-                </div>
-                
-                <button class="btn-login" name="login">
-                    <i class="fas fa-sign-in-alt me-2"></i> Login
-                </button>
-            </form>
-            
-
             </div>
-            
+            <div class="vfoot">&copy; <?= date('Y') ?> Smart Rent Hub. Semua hak terpelihara.</div>
+        </div>
 
+        <div class="auth-form-side">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="brand-header">
+                        <h2>Selamat Kembali</h2>
+                        <p>Log masuk untuk teruskan ke akaun anda</p>
+                    </div>
+
+                    <?php if($error): ?>
+                        <div class="alert alert-danger alert-custom alert-dismissible fade show">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <?php echo $error; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <form method="POST">
+                        <div class="input-group-custom">
+                            <i class="fas fa-user input-icon"></i>
+                            <input class="form-control" type="text" name="email" placeholder="Email / No IC / Username" required>
+                        </div>
+
+                        <div class="input-group-custom">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input class="form-control" type="password" name="password" placeholder="Kata laluan" required>
+                        </div>
+
+                        <div class="options-row">
+                            <a href="#" class="forgot-password">Lupa kata laluan?</a>
+                        </div>
+
+                        <button class="btn-login" name="login">
+                            <i class="fas fa-sign-in-alt me-2"></i> Log Masuk
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

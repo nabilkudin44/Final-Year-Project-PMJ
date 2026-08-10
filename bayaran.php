@@ -1,6 +1,7 @@
 <?php
+ob_start();
 include("db.php");
-include("db_toyyipay.php");
+include_once("db_toyyipay.php");
 include("header_penyewa.php");
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'penyewa') {
@@ -73,8 +74,8 @@ if (isset($_POST['bayar'])) {
         'billPriceSetting' => 1,
         'billPayorInfo' => 1,
         'billAmount' => (string)$billAmount,
-        'billReturnUrl' => 'http://localhost/rental_hub/payment_return.php?id_bayaran=' . $id_bayaran,
-        'billCallbackUrl' => 'http://localhost/rental_hub/payment_callback.php',
+        'billReturnUrl' => TOYYIBPAY_RETURN_URL . '?id_bayaran=' . $id_bayaran,
+        'billCallbackUrl' => TOYYIBPAY_CALLBACK_URL,
         'billExternalReferenceNo' => $ref_no,
         'billTo' => $penyewa['nama'],
         'billEmail' => $penyewa['email'],
@@ -85,53 +86,62 @@ if (isset($_POST['bayar'])) {
     
     // Debug - log data
     error_log("ToyyibPay Request: " . print_r($data, true));
-    
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_POST, 1);
-    curl_setopt($curl, CURLOPT_URL, $api_url);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-    
-    $result_api = curl_exec($curl);
-    $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    $curl_error = curl_error($curl);
-    curl_close($curl);
-    
-    // Debug - log response
-    error_log("ToyyibPay Response: " . $result_api);
-    error_log("HTTP Code: " . $http_code);
-    error_log("CURL Error: " . $curl_error);
-    
-    // Tunjukkan error jika ada
-    if ($curl_error) {
-        $error = "CURL Error: " . $curl_error;
-    }
-    
-    $response = json_decode($result_api);
-    
-    // SEMAK RESPONSE DENGAN BETUL
-    if ($response && is_array($response) && isset($response[0]->BillCode)) {
-        $bill_code = $response[0]->BillCode;
-        
-        // Update record dengan bill code
-        $sql = "UPDATE bayaran SET bill_code = ? WHERE id_bayaran = ?";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "si", $bill_code, $id_bayaran);
-        mysqli_stmt_execute($stmt);
-        
-        // Redirect ke halaman pembayaran ToyyibPay
-        $payment_url = (TOYYIBPAY_SANDBOX ? 'https://dev.toyyibpay.com/' : 'https://toyyibpay.com/') . $bill_code;
-        header("Location: " . $payment_url);
-        exit();
+
+    if (!function_exists('curl_init')) {
+        $error = "Extension 'curl' tidak aktif dalam PHP. Buka php.ini, cari <code>;extension=curl</code>, buang tanda ';' di depan, restart Apache.";
     } else {
-        // Tunjukkan error
-        $error = "Gagal mencipta bil. Sila cuba lagi.";
-        if ($result_api) {
-            $error .= "<br><small>Response: " . htmlspecialchars($result_api) . "</small>";
-        }
-        if (isset($response->message)) {
-            $error .= "<br><small>Message: " . htmlspecialchars($response->message) . "</small>";
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_URL, $api_url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 20);
+
+        $result_api = curl_exec($curl);
+        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($curl);
+        curl_close($curl);
+
+        // Debug - log response
+        error_log("ToyyibPay Response: " . $result_api);
+        error_log("HTTP Code: " . $http_code);
+        error_log("CURL Error: " . $curl_error);
+
+        if ($curl_error) {
+            $error = "CURL Error: " . $curl_error . " — semak sambungan internet server dan firewall.";
+        } elseif (empty($result_api)) {
+            $error = "Tiada respons dari ToyyibPay (HTTP $http_code). Cuba semak firewall/antivirus yang mungkin sekat sambungan keluar.";
+        } else {
+            $response = json_decode($result_api);
+
+            // SEMAK RESPONSE DENGAN BETUL
+            if ($response && is_array($response) && isset($response[0]->BillCode)) {
+                $bill_code = $response[0]->BillCode;
+
+                // Update record dengan bill code
+                $sql = "UPDATE bayaran SET bill_code = ? WHERE id_bayaran = ?";
+                $stmt = mysqli_prepare($conn, $sql);
+                mysqli_stmt_bind_param($stmt, "si", $bill_code, $id_bayaran);
+                mysqli_stmt_execute($stmt);
+
+                // Redirect ke halaman pembayaran ToyyibPay
+                $payment_url = (TOYYIBPAY_SANDBOX ? 'https://dev.toyyibpay.com/' : 'https://toyyibpay.com/') . $bill_code;
+                header("Location: " . $payment_url);
+                exit();
+            } else {
+                if (stripos($result_api, 'KEY-DID-NOT-EXIST') !== false) {
+                    $error = "Secret Key / Category Code tidak sah atau akaun ToyyibPay tidak aktif. Sila sahkan: (1) key diambil dari dev.toyyibpay.com jika TOYYIBPAY_SANDBOX=true, (2) category code dicipta di bawah akaun yang sama, (3) akaun sudah disahkan/aktif.";
+                } elseif (stripos($result_api, 'invalid') !== false) {
+                    $error = "Data yang dihantar ke ToyyibPay tidak sah. Semak semula maklumat bil.";
+                } else {
+                    $error = "Gagal mencipta bil. Sila cuba lagi.";
+                }
+                $error .= "<br><small>Response: " . htmlspecialchars($result_api) . "</small>";
+                if (isset($response->message)) {
+                    $error .= "<br><small>Message: " . htmlspecialchars($response->message) . "</small>";
+                }
+            }
         }
     }
 }
@@ -157,164 +167,13 @@ $stmt_histori = mysqli_prepare($conn, $sql_histori);
 mysqli_stmt_bind_param($stmt_histori, "i", $id_penyewa);
 mysqli_stmt_execute($stmt_histori);
 $result_histori = mysqli_stmt_get_result($stmt_histori);
+
+// Mesej yang ditetapkan oleh payment_return.php selepas pulang dari ToyyibPay.
+$payment_message = $_SESSION['payment_message'] ?? null;
+$payment_type = $_SESSION['payment_type'] ?? 'info';
+unset($_SESSION['payment_message'], $_SESSION['payment_type']);
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Bayaran Sewa</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background: #f0f2f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .page-wrapper {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .card-custom {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .card-header-custom {
-            padding: 15px 20px;
-            background: #f8f9fc;
-            border-bottom: 1px solid #e8ecf1;
-        }
-        .card-header-custom h5 {
-            font-weight: 700;
-            color: #1a1a2e;
-            margin: 0;
-        }
-        .card-header-custom h5 i {
-            color: #e4b700;
-            margin-right: 8px;
-        }
-        .card-body-custom {
-            padding: 20px;
-        }
-        .badge-status {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-status.lunas {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        .badge-status.belum {
-            background: #fce4ec;
-            color: #c62828;
-        }
-        .badge-status.pending {
-            background: #fff3e0;
-            color: #e65100;
-        }
-        .badge-status.tiada {
-            background: #f5f5f5;
-            color: #888;
-        }
-        .btn-bayar {
-            background: #e4b700;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-weight: 700;
-            color: white;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-        .btn-bayar:hover {
-            background: #c49b00;
-            color: white;
-            transform: translateY(-2px);
-        }
-        .btn-bayar:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 2px solid #e8ecf1;
-            padding: 10px 15px;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #e4b700;
-            box-shadow: 0 0 0 0.2rem rgba(228, 183, 0, 0.15);
-        }
-        .table-history {
-            font-size: 14px;
-        }
-        .table-history thead th {
-            background: #f8f9fc;
-            color: #1a1a2e;
-            font-weight: 600;
-            font-size: 12px;
-            padding: 10px 12px;
-            border-bottom: 2px solid #e8ecf1;
-        }
-        .table-history tbody td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .table-history tbody tr:hover {
-            background: #fafbfc;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 30px 20px;
-        }
-        .empty-state i {
-            font-size: 40px;
-            color: #ddd;
-            margin-bottom: 10px;
-        }
-        .empty-state h6 {
-            color: #666;
-        }
-        .empty-state p {
-            color: #999;
-            font-size: 14px;
-        }
-        .info-box {
-            background: #e3f2fd;
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #1565c0;
-        }
-        .info-box i {
-            color: #1565c0;
-            margin-right: 10px;
-        }
-        .alert-error {
-            background: #fce4ec;
-            color: #c62828;
-            border-left: 4px solid #c62828;
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 15px;
-        }
-        .alert-error i {
-            margin-right: 10px;
-        }
-        .alert-error small {
-            display: block;
-            margin-top: 5px;
-            font-size: 12px;
-            word-break: break-all;
-        }
-    </style>
-</head>
-<body>
     <div class="page-wrapper">
         <!-- Header -->
         <div class="card-custom">
@@ -322,6 +181,11 @@ $result_histori = mysqli_stmt_get_result($stmt_histori);
                 <h5><i class="fas fa-credit-card"></i> Bayaran Sewa</h5>
             </div>
             <div class="card-body-custom">
+                <?php if ($payment_message): ?>
+                    <div class="alert alert-<?= htmlspecialchars($payment_type) ?>" role="alert">
+                        <?= htmlspecialchars($payment_message) ?>
+                    </div>
+                <?php endif; ?>
                 <?php if ($sewa): ?>
                     <div class="info-box">
                         <i class="fas fa-home"></i>
@@ -445,6 +309,4 @@ $result_histori = mysqli_stmt_get_result($stmt_histori);
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include("footer_penyewa.php"); ?>

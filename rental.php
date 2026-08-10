@@ -19,8 +19,13 @@ $rumah_kosong_sql = "SELECT * FROM rumah WHERE status = 'Kosong' ORDER BY no_rum
 $rumah_kosong_result = mysqli_query($conn, $rumah_kosong_sql);
 
 // Get list of all tenants
-$penyewa_sql = "SELECT * FROM penyewa ORDER BY nama";
+$penyewa_sql = "SELECT * FROM penyewa 
+                WHERE id_penyewa NOT IN (
+                    SELECT DISTINCT id_penyewa FROM sewa
+                )
+                ORDER BY nama";
 $penyewa_result = mysqli_query($conn, $penyewa_sql);
+
 
 // ============================================
 // PROSES TAMBAH SEWAAN
@@ -107,7 +112,7 @@ if (isset($_POST['update_sewa'])) {
 }
 
 // ============================================
-// PROSES TAMAT SEWAAN (DELETE)
+// PROSES TAMAT SEWAAN (DELETE) - BAIKI
 // ============================================
 if (isset($_GET['tamat'])) {
     $id_sewa = mysqli_real_escape_string($conn, $_GET['tamat']);
@@ -124,20 +129,32 @@ if (isset($_GET['tamat'])) {
         $row = mysqli_fetch_assoc($result);
         $id_rumah = $row['id_rumah'];
         
-        // Delete from sewa
+        // ============================================
+        // STEP 1: DELETE FROM bayaran FIRST
+        // ============================================
+        $sql = "DELETE FROM bayaran WHERE id_sewa = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "i", $id_sewa);
+        mysqli_stmt_execute($stmt);
+        
+        // ============================================
+        // STEP 2: DELETE FROM sewa
+        // ============================================
         $sql = "DELETE FROM sewa WHERE id_sewa = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "i", $id_sewa);
         mysqli_stmt_execute($stmt);
         
-        // Update rumah status to 'Kosong'
+        // ============================================
+        // STEP 3: Update rumah status to 'Kosong'
+        // ============================================
         $sql = "UPDATE rumah SET status = 'Kosong' WHERE id_rumah = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "i", $id_rumah);
         mysqli_stmt_execute($stmt);
         
         mysqli_commit($conn);
-        $success = "Sewaan berjaya ditamatkan!";
+        $success = "Sewaan berjaya ditamatkan! Semua rekod bayaran telah dipadam.";
         
     } catch (Exception $e) {
         mysqli_rollback($conn);
@@ -161,373 +178,6 @@ $sql = "SELECT
 $result = mysqli_query($conn, $sql);
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Data Sewaan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background: #f0f2f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .page-wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header-card h4 {
-            font-weight: 700;
-            color: #1a1a2e;
-            margin: 0;
-        }
-        
-        .header-card h4 i {
-            color: #e4b700;
-        }
-        
-        .btn-add {
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-add:hover {
-            background: #218838;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        
-        .table-toolbar {
-            padding: 12px 20px;
-            background: #f8f9fc;
-            border-bottom: 1px solid #e8ecf1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .table-toolbar .nav-links {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            font-size: 14px;
-        }
-        
-        .table-toolbar .nav-links a {
-            color: #e4b700;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .table-toolbar .nav-links a:hover {
-            text-decoration: underline;
-        }
-        
-        .table-toolbar .nav-links .separator {
-            color: #ddd;
-        }
-        
-        .table-toolbar .table-name {
-            font-weight: 700;
-            color: #1a1a2e;
-            font-size: 16px;
-        }
-        
-        .table-toolbar .table-name span {
-            color: #e4b700;
-        }
-        
-        .table-toolbar .actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-toolbar {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 5px 14px;
-            font-size: 13px;
-            color: #555;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-toolbar:hover {
-            background: #f0f0f0;
-            border-color: #bbb;
-        }
-        
-        .table {
-            margin: 0;
-            font-size: 14px;
-        }
-        
-        .table thead th {
-            background: #f8f9fc;
-            color: #1a1a2e;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 12px 15px;
-            border-bottom: 2px solid #e8ecf1;
-            border-top: none;
-            white-space: nowrap;
-        }
-        
-        .table tbody td {
-            padding: 12px 15px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f0f0f0;
-            color: #333;
-        }
-        
-        .table tbody tr:hover {
-            background: #fafbfc;
-        }
-        
-        .table tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .table-info-footer {
-            padding: 12px 20px;
-            background: #f8f9fc;
-            border-top: 1px solid #e8ecf1;
-            font-size: 13px;
-            color: #888;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .table-info-footer span {
-            color: #1a1a2e;
-            font-weight: 600;
-        }
-        
-        .text-ellipsis {
-            max-width: 150px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: inline-block;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-        }
-        
-        .empty-state i {
-            font-size: 50px;
-            color: #ddd;
-            margin-bottom: 15px;
-        }
-        
-        .empty-state h5 {
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .empty-state p {
-            color: #999;
-        }
-        
-        /* Modal Styles */
-        .modal-content {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        
-        .modal-header {
-            background: linear-gradient(135deg, #1a1a2e, #2d2d44);
-            color: white;
-            border-radius: 12px 12px 0 0;
-            border: none;
-            padding: 20px 25px;
-        }
-        
-        .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-        }
-        
-        .modal-header h5 {
-            font-weight: 700;
-        }
-        
-        .modal-body {
-            padding: 25px 30px;
-        }
-        
-        .modal-footer {
-            border-top: none;
-            padding: 15px 30px 25px;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        
-        .form-label .required {
-            color: #dc3545;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 8px;
-            padding: 10px 15px;
-            border: 2px solid #e8ecf1;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #e4b700;
-            box-shadow: 0 0 0 0.2rem rgba(228, 183, 0, 0.15);
-        }
-        
-        .form-text {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        .btn-simpan {
-            background: #e4b700;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 35px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-simpan:hover {
-            background: #d4a800;
-            color: white;
-        }
-        
-        .btn-batal {
-            background: #e8ecf1;
-            color: #666;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 25px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-batal:hover {
-            background: #d5d9e0;
-            color: #444;
-        }
-        
-        .btn-edit-action {
-            background: #ffc107;
-            border: none;
-            border-radius: 6px;
-            padding: 5px 15px;
-            font-weight: 600;
-            color: #1a1a2e;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-edit-action:hover {
-            background: #e0a800;
-            color: #1a1a2e;
-        }
-        
-        .btn-tamat-action {
-            background: #dc3545;
-            border: none;
-            border-radius: 6px;
-            padding: 5px 15px;
-            font-weight: 600;
-            color: white;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-tamat-action:hover {
-            background: #c82333;
-            color: white;
-        }
-        
-        .alert {
-            border-radius: 10px;
-            border: none;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        .alert-danger {
-            background: #fce4ec;
-            color: #c62828;
-        }
-        
-        @media (max-width: 768px) {
-            .header-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            .table-toolbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .table-toolbar .nav-links {
-                flex-wrap: wrap;
-            }
-            .table-info-footer {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .modal-body {
-                padding: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
     <div class="page-wrapper">
         <!-- Header -->
         <div class="header-card">
@@ -564,7 +214,7 @@ $result = mysqli_query($conn, $sql);
                 <div class="nav-links">
                     <a href="#"><i class="fas fa-home"></i> rumah</a>
                     <span class="separator">></span>
-                    <a href="#" style="color: #1a1a2e; cursor: default;">sewa</a>
+                    <a href="#" style="color: var(--ink); cursor: default;">sewa</a>
                     <span class="separator">></span>
                     <span class="table-name"><span>Data</span></span>
                 </div>
@@ -614,7 +264,7 @@ $result = mysqli_query($conn, $sql);
                                         </button>
                                         <a href="?tamat=<?= $row['id_sewa'] ?>" 
                                            class="btn-tamat-action"
-                                           onclick="return confirm('Anda pasti mahu tamatkan sewaan ini?')">
+                                           onclick="return confirm('Anda pasti mahu tamatkan sewaan ini? Tindakan ini akan memadam semua rekod bayaran yang berkaitan.')">
                                             <i class="fas fa-times me-1"></i> Tamat
                                         </a>
                                     </div>
@@ -657,7 +307,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Pilih Rumah -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-home me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-home me-1" style="color: var(--primary);"></i> 
                                 Pilih Rumah <span class="required">*</span>
                             </label>
                             <select class="form-select" name="id_rumah" required>
@@ -683,7 +333,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Pilih Penyewa -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-user me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-user me-1" style="color: var(--primary);"></i> 
                                 Pilih Penyewa <span class="required">*</span>
                             </label>
                             <select class="form-select" name="id_penyewa" required>
@@ -709,7 +359,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Tarikh Masuk -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-calendar-plus me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-calendar-plus me-1" style="color: var(--primary);"></i> 
                                 Tarikh Masuk <span class="required">*</span>
                             </label>
                             <input type="date" class="form-control" name="tarikh_masuk" required>
@@ -718,7 +368,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Deposit -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-money-bill me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-money-bill me-1" style="color: var(--primary);"></i> 
                                 Deposit (RM)
                             </label>
                             <input type="number" step="0.01" class="form-control" name="deposit" placeholder="0.00" value="0.00">
@@ -757,7 +407,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Pilih Rumah -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-home me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-home me-1" style="color: var(--primary);"></i> 
                                 Pilih Rumah <span class="required">*</span>
                             </label>
                             <select class="form-select" name="id_rumah" id="edit_id_rumah" required>
@@ -779,7 +429,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Pilih Penyewa -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-user me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-user me-1" style="color: var(--primary);"></i> 
                                 Pilih Penyewa <span class="required">*</span>
                             </label>
                             <select class="form-select" name="id_penyewa" id="edit_id_penyewa" required>
@@ -800,7 +450,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Tarikh Masuk -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-calendar-plus me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-calendar-plus me-1" style="color: var(--primary);"></i> 
                                 Tarikh Masuk <span class="required">*</span>
                             </label>
                             <input type="date" class="form-control" name="tarikh_masuk" id="edit_tarikh_masuk" required>
@@ -809,7 +459,7 @@ $result = mysqli_query($conn, $sql);
                         <!-- Deposit -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-money-bill me-1" style="color: #e4b700;"></i> 
+                                <i class="fas fa-money-bill me-1" style="color: var(--primary);"></i> 
                                 Deposit (RM)
                             </label>
                             <input type="number" step="0.01" class="form-control" name="deposit" id="edit_deposit" placeholder="0.00">
@@ -829,7 +479,6 @@ $result = mysqli_query($conn, $sql);
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function editSewa(data) {
             document.getElementById('edit_id_sewa').value = data.id_sewa;
@@ -839,5 +488,4 @@ $result = mysqli_query($conn, $sql);
             document.getElementById('edit_deposit').value = data.deposit || 0;
         }
     </script>
-</body>
-</html>
+<?php include("footer.php"); ?>
